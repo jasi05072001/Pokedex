@@ -12,8 +12,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.pokedex.screens.Screens
+import com.example.pokedex.screens.detailsScreen.PokemonDetailScreen
 import com.example.pokedex.screens.homeScreen.HomeScreen
 import com.example.pokedex.screens.splashScreen.SplashScreen
+import java.util.Locale
 
 @Composable
 fun Navigation() {
@@ -54,6 +56,12 @@ fun Navigation() {
                 color?.let { Color(it) } ?:Color.White
             }
             val pokemonName =  remember { it.arguments?.getString("pokemonName") }
+
+            PokemonDetailScreen(
+                dominantColor = dominantColor,
+                pokemonName = pokemonName?.lowercase(Locale.ROOT) ?: "",
+                navController = navController
+            )
 
         }
 

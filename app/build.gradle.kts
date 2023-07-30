@@ -122,6 +122,9 @@ dependencies {
     //lottie
     implementation("com.airbnb.android:lottie-compose:6.0.0")
 
+    //ar core
+    implementation("com.google.ar:core:1.33.0")
+
 
 
 }

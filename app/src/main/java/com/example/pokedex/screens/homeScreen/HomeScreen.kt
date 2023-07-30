@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBackIosNew
+import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,18 +54,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.animateLottieCompositionAsState
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.pokedex.R
+import com.example.pokedex.components.AppLoader
 import com.example.pokedex.components.SearchBar
 import com.example.pokedex.data.models.PokeDexListEntry
 import com.example.pokedex.screens.Screens
@@ -157,7 +150,7 @@ fun HomeScreen(
                                 }
                             ) {
                                 Image(
-                                    imageVector = Icons.Outlined.ArrowBackIosNew,
+                                    imageVector = Icons.Outlined.ArrowBack,
                                     contentDescription = "Close Search",
                                     Modifier.size(24.dp),
                                     colorFilter = ColorFilter.tint(
@@ -242,6 +235,7 @@ fun PokeMonCard(
                 contentDescription = entry.pokemonName,
                 imageLoader = ImageLoader.Builder(context)
                     .crossfade(true)
+                    .crossfade(1500)
                     .build(),
                 modifier = Modifier
                     .size(100.dp)
@@ -251,8 +245,6 @@ fun PokeMonCard(
                     viewModel.getDominantColor(it.result.drawable) { color -> dominantColor = color }
 
                 },
-
-
                 )
 
             Text(text = entry.pokemonName,
@@ -315,16 +307,7 @@ fun PokemonList(
     val loadError by remember { viewModel.loadError }
     val isSearching by remember {viewModel.isSearching }
 
-    val composition by  rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.loader)
-    )
-    val speed by remember { mutableFloatStateOf(1.25f) }
 
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever,
-        speed = speed,
-    )
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp)
@@ -351,31 +334,7 @@ fun PokemonList(
         modifier = Modifier.fillMaxSize()
     ) {
         if (isLoading){
-            Dialog(
-                onDismissRequest = {  },
-                properties = DialogProperties(
-                    dismissOnBackPress = false,
-                    dismissOnClickOutside = false
-                )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .size(100.dp)
-                        .background(Color.White, shape = RoundedCornerShape(16.dp)),
-                    contentAlignment = Center
-                ) {
-                    LottieAnimation(
-                        composition = composition,
-                        progress =progress,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(10.dp),
-                        contentScale = ContentScale.FillBounds
-                    )
-
-                }
-            }
+          AppLoader()
 
         }
         if (loadError.isNotEmpty()){
