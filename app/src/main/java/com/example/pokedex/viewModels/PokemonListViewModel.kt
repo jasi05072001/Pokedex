@@ -13,6 +13,7 @@ import com.example.pokedex.repository.PokemonRepository
 import com.example.pokedex.utils.Constants.PAGE_SIZE
 import com.example.pokedex.utils.Resources
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -28,6 +29,11 @@ class PokemonListViewModel @Inject constructor(
     var isLoading = mutableStateOf(false)
     var endReached = mutableStateOf(false)
 
+    private var cachedPokemonList = listOf<PokeDexListEntry>()
+    private var isSearchStarted = true
+    var isSearching = mutableStateOf(false)
+
+
     init {
         loadPokemon()
     }
@@ -36,9 +42,12 @@ class PokemonListViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading.value = true
 
-            val result = repository.getPokemonList(PAGE_SIZE,currentPage * PAGE_SIZE)
-
-            when(result){
+            when(
+                val result = repository.getPokemonList(
+                    PAGE_SIZE,
+                    currentPage * PAGE_SIZE
+                )
+            ){
                 is Resources.Success -> {
                     endReached.value = currentPage * PAGE_SIZE >= result.data!!.count
 
@@ -68,7 +77,6 @@ class PokemonListViewModel @Inject constructor(
                     isLoading.value = false
                 }
             }
-
         }
 
     }
@@ -83,5 +91,31 @@ class PokemonListViewModel @Inject constructor(
         }
     }
 
+    fun searchPokemonList(name:String){
+        val listToSearch = if (isSearchStarted){
+            pokemonList.value
+        }else{
+            cachedPokemonList
+        }
 
+        viewModelScope.launch(Dispatchers.Default) {
+
+            if (name.isEmpty()){
+                pokemonList.value = cachedPokemonList
+                isSearching.value = false
+                isSearchStarted = true
+                return@launch
+            }
+            val results = listToSearch.filter {
+                it.pokemonName.contains(name.trim(), ignoreCase = true) ||
+                        it.number.toString() == name.trim()
+            }
+            if (isSearchStarted){
+                cachedPokemonList = pokemonList.value
+                isSearchStarted = false
+            }
+            pokemonList.value = results
+            isSearching.value = true
+        }
+    }
 }

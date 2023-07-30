@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
-import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.twotone.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -82,7 +81,7 @@ fun HomeScreen(
     navController: NavController,
 ) {
 
-
+    val viewModel :PokemonListViewModel = hiltViewModel()
     val isSearchBarVisible = remember {
         mutableStateOf(false)
     }
@@ -105,6 +104,7 @@ fun HomeScreen(
                                 value = name,
                                 onValueChange = {
                                     name = it
+                                    viewModel.searchPokemonList(it)
                                 }
                             )
                         } else {
@@ -146,32 +146,7 @@ fun HomeScreen(
                             }
                         }
                         else {
-                            AnimatedVisibility(
-                                visible = isSearchBarVisible.value,
-                                enter = slideInVertically(
-                                    initialOffsetY = { fullWidth -> fullWidth },
-                                    animationSpec = tween(
-                                        durationMillis = 1000,
-                                        easing = EaseInOut
-                                    )
-                                ),
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        name = ""
-
-                                    }
-                                ) {
-                                    Image(
-                                        imageVector = Icons.Outlined.Cancel,
-                                        contentDescription = "Close Search",
-                                        colorFilter = ColorFilter.tint(
-                                            Color.White
-                                        )
-                                    )
-                                }
-
-                            }
+                           Box(modifier = Modifier)
                         }
                     },
                     navigationIcon = {
@@ -338,6 +313,7 @@ fun PokemonList(
     val endReached by remember { viewModel.endReached }
     val isLoading by remember { viewModel.isLoading }
     val loadError by remember { viewModel.loadError }
+    val isSearching by remember {viewModel.isSearching }
 
     val composition by  rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.loader)
@@ -359,7 +335,12 @@ fun PokemonList(
             (pokemonList.size / 2) + 1
         }
         items(itemCount){
-            if (it >= itemCount -1 && !endReached){
+            if (
+                it >= itemCount -1 &&
+                !endReached  &&
+                !isLoading &&
+                !isSearching
+            ) {
                 viewModel.loadPokemon()
             }
             PokeDexRow(index = it, entries = pokemonList, navController = navController)

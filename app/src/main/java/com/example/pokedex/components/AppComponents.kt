@@ -28,12 +28,8 @@ fun SearchBar(
     onValueChange: (String) -> Unit
 ) {
 
-
-    val containerColor = Color(0xff073b4c).copy(alpha = 0.5f)
-
     val textColor = Color.White
-
-
+    
     OutlinedTextField(
         value = value,
         onValueChange = {
@@ -51,12 +47,12 @@ fun SearchBar(
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
-            containerColor = containerColor,
+            containerColor = Color.DarkGray,
             cursorColor = textColor,
         ),
         modifier = Modifier
-            .padding(end = 20.dp, top = 2.dp, bottom = 2.dp)
-            .height(50.dp)
+            .padding(start = 30.dp, bottom = 2.dp, top = 2.dp, end = 10.dp)
+            .height(48.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         textStyle = TextStyle(

@@ -58,7 +58,7 @@ android {
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.activity:activity-compose:1.7.2")
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
@@ -111,7 +111,7 @@ dependencies {
 
     //coil
     implementation("io.coil-kt:coil-compose:2.4.0")
-//    implementation ("com.google.accompanist:accompanist-coil:0.7.0")
+
 
     //support palette
     implementation ("com.android.support:palette-v7:28.0.0")
@@ -120,7 +120,7 @@ dependencies {
     implementation ("com.google.android.material:material:1.11.0-alpha01")
 
     //lottie
-    implementation("com.airbnb.android:lottie-compose:4.0.0")
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
 
 
 
