@@ -23,7 +23,6 @@ class PokemonListViewModel @Inject constructor(
 ):ViewModel() {
 
     private var currentPage = 0
-
     var pokemonList = mutableStateOf<List<PokeDexListEntry>>(listOf())
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
@@ -33,25 +32,17 @@ class PokemonListViewModel @Inject constructor(
         loadPokemon()
     }
 
-    fun getDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
-        val bitmap = (drawable as BitmapDrawable).bitmap.copy(Bitmap.Config.ARGB_8888,true)
-
-        Palette.from(bitmap).generate { palette ->
-            palette?.dominantSwatch?.rgb?.let { colorValue -> /// can use dominantSwatch
-                onFinish(Color(color =colorValue))
-            }
-        }
-    }
-
     fun loadPokemon(){
         viewModelScope.launch {
             isLoading.value = true
-            val result = repository.getPokemonList(limit = PAGE_SIZE, offset =currentPage * PAGE_SIZE)
+
+            val result = repository.getPokemonList(PAGE_SIZE,currentPage * PAGE_SIZE)
 
             when(result){
-                is Resources.Success ->{
+                is Resources.Success -> {
                     endReached.value = currentPage * PAGE_SIZE >= result.data!!.count
-                    val pokedexEntries = result.data.results.mapIndexed { index, entry ->
+
+                    val pokedexEntries = result.data.results.mapIndexed { _, entry ->
                         val number =  if(entry.url.endsWith("/")){
                             entry.url.dropLast(1).takeLastWhile { it.isDigit() }
                         }
@@ -59,10 +50,14 @@ class PokemonListViewModel @Inject constructor(
                             entry.url.takeLastWhile { it.isDigit() }
                         }
                         val url =  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png"
-                        PokeDexListEntry(entry.name.capitalize(Locale.ROOT),url,number.toInt())
+                        PokeDexListEntry(entry.name.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(
+                                Locale.ROOT
+                            ) else it.toString()
+                        },url,number.toInt())
                     }
 
-                    currentPage++
+                    currentPage ++
                     loadError.value = ""
                     isLoading.value = false
                     pokemonList.value += pokedexEntries
@@ -77,4 +72,16 @@ class PokemonListViewModel @Inject constructor(
         }
 
     }
+
+    fun getDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
+        val bitmap = (drawable as BitmapDrawable).bitmap.copy(Bitmap.Config.ARGB_8888,true)
+
+        Palette.from(bitmap).generate { palette ->
+            palette?.dominantSwatch?.rgb?.let { colorValue ->
+                onFinish(Color(color = colorValue))
+            }
+        }
+    }
+
+
 }

@@ -7,12 +7,12 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.twotone.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -34,10 +35,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -48,21 +51,29 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.pokedex.R
 import com.example.pokedex.components.SearchBar
 import com.example.pokedex.data.models.PokeDexListEntry
 import com.example.pokedex.screens.Screens
 import com.example.pokedex.ui.theme.Roboto
 import com.example.pokedex.viewModels.PokemonListViewModel
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +82,7 @@ fun HomeScreen(
     navController: NavController,
 ) {
 
-    val context = LocalContext.current
+
     val isSearchBarVisible = remember {
         mutableStateOf(false)
     }
@@ -120,10 +131,10 @@ fun HomeScreen(
                             ) {
                                 IconButton(
                                     onClick = {
-                                    isSearchBarVisible.value = !isSearchBarVisible.value
-                                    searchBarAnimationProgress.value =
-                                        !searchBarAnimationProgress.value
-                                }) {
+                                        isSearchBarVisible.value = !isSearchBarVisible.value
+                                        searchBarAnimationProgress.value =
+                                            !searchBarAnimationProgress.value
+                                    }) {
                                     Image(
                                         imageVector = Icons.TwoTone.Search,
                                         contentDescription = "Search",
@@ -222,7 +233,7 @@ fun PokeMonCard(
     viewModel: PokemonListViewModel = hiltViewModel()
 ) {
 
-    val defaultDominantColor = Color(0xff2a75bb)
+    val defaultDominantColor = Color(0xffececec)
 
     val context = LocalContext.current
 
@@ -231,11 +242,10 @@ fun PokeMonCard(
     }
 
     Box(
-        contentAlignment = Alignment.Center,
+        contentAlignment = Center,
         modifier= modifier
             .shadow(10.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .aspectRatio(1.2f)
             .background(
                 Brush.verticalGradient(
                     listOf(
@@ -260,7 +270,7 @@ fun PokeMonCard(
                     .build(),
                 modifier = Modifier
                     .size(100.dp)
-                    .align(Alignment.CenterHorizontally),
+                    .align(CenterHorizontally),
                 contentScale = ContentScale.FillBounds,
                 onSuccess = {
                     viewModel.getDominantColor(it.result.drawable) { color -> dominantColor = color }
@@ -268,29 +278,31 @@ fun PokeMonCard(
                 },
 
 
-            )
+                )
 
             Text(text = entry.pokemonName,
-                color = Color.White,
+                color = Color.Black,
                 fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Normal,
                 fontFamily = Roboto,
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                    .align(CenterHorizontally)
                     .padding(4.dp)
             )
+            Spacer(modifier = Modifier.height(10.dp))
 
         }
     }
 }
 
-//TODO :part 4
 @Composable
 fun PokeDexRow(
     index: Int,
     entries : List<PokeDexListEntry>,
     navController: NavController,
 ) {
+
+
     Column (modifier = Modifier.padding(10.dp)){
         Row(
             modifier = Modifier
@@ -327,19 +339,110 @@ fun PokemonList(
     val isLoading by remember { viewModel.isLoading }
     val loadError by remember { viewModel.loadError }
 
+    val composition by  rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.loader)
+    )
+    val speed by remember { mutableFloatStateOf(1.25f) }
+
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever,
+        speed = speed,
+    )
+
     LazyColumn(
         contentPadding = PaddingValues(16.dp)
     ){
         val itemCount = if (pokemonList.size % 2 == 0) {
             pokemonList.size / 2
         } else {
-            pokemonList.size / 2 + 1
+            (pokemonList.size / 2) + 1
         }
         items(itemCount){
-            if (it >= itemCount -1 && endReached){
+            if (it >= itemCount -1 && !endReached){
                 viewModel.loadPokemon()
             }
             PokeDexRow(index = it, entries = pokemonList, navController = navController)
         }
     }
+    Box(
+        contentAlignment = Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (isLoading){
+            Dialog(
+                onDismissRequest = {  },
+                properties = DialogProperties(
+                    dismissOnBackPress = false,
+                    dismissOnClickOutside = false
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .size(100.dp)
+                        .background(Color.White, shape = RoundedCornerShape(16.dp)),
+                    contentAlignment = Center
+                ) {
+                    LottieAnimation(
+                        composition = composition,
+                        progress =progress,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(10.dp),
+                        contentScale = ContentScale.FillBounds
+                    )
+
+                }
+            }
+
+        }
+        if (loadError.isNotEmpty()){
+            RetrySection(error = loadError.replaceFirstChar {
+                if (it.isLowerCase()) it.titlecase(
+                    Locale.ROOT
+                ) else it.toString()
+            }) {
+                viewModel.loadPokemon()
+
+            }
+        }
+    }
+}
+
+
+@Composable
+fun RetrySection(
+    error :String,
+    onRetry:()-> Unit
+) {
+    Column(
+        modifier = Modifier,
+        horizontalAlignment = CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_erro),
+            contentDescription = "error",
+            modifier = Modifier.size(120.dp),
+            contentScale = ContentScale.FillBounds
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = error,
+            color = Color.Red,
+            fontSize = 22.sp,
+            fontFamily = Roboto,
+            fontStyle = FontStyle.Italic,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { onRetry.invoke() },
+            modifier =  Modifier.align(CenterHorizontally)
+        ) {
+            Text(text = "Retry")
+        }
+    }
+
 }
