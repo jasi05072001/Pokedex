@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -116,6 +118,7 @@ fun PokemonDetailScreen(
                         modifier = Modifier
                             .size(pokemonImgSize)
                             .offset(y = topPadding)
+                            .padding(bottom = 30.dp)
 
                     )
                 }
@@ -164,6 +167,11 @@ fun PokeMonDetailsStateWrapper(
 
     when(pokemonDetails){
         is Resources.Success -> {
+            PokemonDetailsSection(
+                pokemonDetails = pokemonDetails.data!!,
+                modifier = modifier
+                    .padding(30.dp)
+            )
 
         }
         is  Resources.Error -> {
@@ -204,25 +212,28 @@ fun PokeMonDetailsStateWrapper(
 fun PokemonDetailsSection(
     pokemonDetails: Pokemon,
     modifier: Modifier = Modifier,
-
-    ) {
-
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .offset(100.dp)
             .verticalScroll(rememberScrollState())
             .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = pokemonDetails.id.toString()
+            text = pokemonDetails.name
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
             fontFamily = Roboto,
             color = Color.Black
         )
+        PokeMonTypeSection(types = pokemonDetails.types)
+        PokemonDetailsDataSection(
+            pokemonWeight = pokemonDetails.weight,
+            pokemonHeight = pokemonDetails.height
+        )
+
 
     }
 }
@@ -232,15 +243,17 @@ fun PokeMonTypeSection(
     types: List<Type>
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(16.dp))
+
+        modifier = Modifier.padding(16.dp)
+    )
     {
         for(type in types){
             Box(contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
+                modifier = Modifier.padding(10.dp)
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
+                    .clip(CircleShape)
                     .background(parseTypeToColor(type))
-                    .padding(8.dp)
                     .height(35.dp)
             ) {
                 Text(
@@ -248,7 +261,8 @@ fun PokeMonTypeSection(
                     color = Color.White,
                     fontSize = 18.sp,
                     fontFamily = Roboto,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(4.dp)
                 )
             }
         }
@@ -258,9 +272,42 @@ fun PokeMonTypeSection(
 }
 
 
-//TODO:11:55
 @Composable
-fun PokemonDetailsDataSection() {
+fun PokemonDetailsDataSection(
+    pokemonWeight :Int,
+    pokemonHeight :Int,
+    sectionHeight: Dp = 100.dp,
+) {
+    val pokemonWeightInKg = remember {
+        pokemonWeight / 10f
+    }
+    val pokemonHeightInMeters = remember {
+        pokemonHeight / 10f
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PokemonDetailsDataItem(
+            dataValue = pokemonWeightInKg,
+            dataUnit = "kg" ,
+            dataIcon = painterResource(id = R.drawable.weight),
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier
+            .size(1.dp, sectionHeight)
+            .background(Color.Black.copy(alpha = 0.2f)))
+
+        PokemonDetailsDataItem(
+            dataValue = pokemonHeightInMeters,
+            dataUnit = "m" ,
+            dataIcon = painterResource(id = R.drawable.height),
+            modifier = Modifier.weight(1f)
+        )
+
+    }
 
 
 }
@@ -275,10 +322,9 @@ fun PokemonDetailsDataItem(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
         modifier = modifier
     ) {
-        Icon(painter = dataIcon, contentDescription = null , tint = Color.Black)
+        Icon(painter = dataIcon, contentDescription = null , tint = Color.Black, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = "$dataValue $dataUnit",
