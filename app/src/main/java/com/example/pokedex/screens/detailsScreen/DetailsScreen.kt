@@ -1,5 +1,8 @@
 package com.example.pokedex.screens.detailsScreen
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,8 +27,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +58,8 @@ import com.example.pokedex.data.remote.responses.Pokemon
 import com.example.pokedex.data.remote.responses.Type
 import com.example.pokedex.ui.theme.Roboto
 import com.example.pokedex.utils.Resources
+import com.example.pokedex.utils.parseStatToAbbr
+import com.example.pokedex.utils.parseStatToColor
 import com.example.pokedex.utils.parseTypeToColor
 import com.example.pokedex.viewModels.PokemonDetails
 import java.util.Locale
@@ -218,7 +227,7 @@ fun PokemonDetailsSection(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+      horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = pokemonDetails.name
@@ -233,6 +242,8 @@ fun PokemonDetailsSection(
             pokemonWeight = pokemonDetails.weight,
             pokemonHeight = pokemonDetails.height
         )
+        
+      PokemonBaseStats(pokemonDetails = pokemonDetails)
 
 
     }
@@ -249,7 +260,8 @@ fun PokeMonTypeSection(
     {
         for(type in types){
             Box(contentAlignment = Alignment.Center,
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier
+                    .padding(10.dp)
                     .weight(1f)
                     .padding(horizontal = 8.dp)
                     .clip(CircleShape)
@@ -332,6 +344,107 @@ fun PokemonDetailsDataItem(
             fontSize = 18.sp,
             fontFamily = Roboto
         )
+
+    }
+
+}
+
+@Composable
+fun PokemonStats(
+    statName :String,
+    statValue :Int,
+    statMaxValue: Int,
+    statColor :Color,
+    statHeight :Dp = 30.dp,
+    animDuration :Int = 1000,
+    animDelay :Int = 0,
+) {
+    var animationPlayed by remember {
+        mutableStateOf(false)
+    }
+
+    val currentPercent = animateFloatAsState(
+        targetValue = if (animationPlayed) {
+            statValue / statMaxValue.toFloat()
+        } else 0f,
+        animationSpec = tween(
+            durationMillis = animDuration,
+            delayMillis = animDelay,
+            easing = FastOutSlowInEasing
+        ), label = ""
+    )
+    LaunchedEffect(key1 = true) {
+        animationPlayed = true
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(statHeight)
+            .clip(CircleShape)
+            .background(Color.LightGray.copy(alpha = 0.3f))
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(currentPercent.value)
+                .fillMaxHeight()
+                .clip(CircleShape)
+                .background(statColor)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = statName.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() },
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontFamily = Roboto
+            )
+            Text(
+                text = (currentPercent.value * statMaxValue).toInt().toString(),
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontFamily = Roboto
+            )
+        }
+    }
+
+}
+
+@Composable
+fun PokemonBaseStats (
+    pokemonDetails: Pokemon,
+    animDelayPerItem :Int = 150,
+
+) {
+    val maxBaseStat = remember {
+        pokemonDetails.stats.maxOf { it.baseStat }
+    }
+
+    Column(Modifier.fillMaxWidth()) {
+
+        Text(
+            text = "Base Stats",
+            color = Color.Black,
+            fontSize = 20.sp,
+            fontFamily = Roboto,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        for(i in pokemonDetails.stats.indices){
+            val stat = pokemonDetails.stats[i]
+            PokemonStats(
+                statName = parseStatToAbbr(stat),
+                statValue = stat.baseStat,
+                statMaxValue = maxBaseStat,
+                statColor = parseStatToColor(stat),
+                animDelay = i * animDelayPerItem
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
     }
 
