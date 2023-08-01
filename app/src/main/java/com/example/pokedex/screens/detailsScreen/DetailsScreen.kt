@@ -1,5 +1,6 @@
 package com.example.pokedex.screens.detailsScreen
 
+import android.os.Build.VERSION.SDK_INT
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -22,7 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -51,7 +51,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.ImageLoader
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+import coil.size.Size
 import com.example.pokedex.R
 import com.example.pokedex.components.AppLoader
 import com.example.pokedex.data.remote.responses.Pokemon
@@ -76,6 +80,7 @@ fun PokemonDetailScreen(
     val pokemonDetails = produceState<Resources<Pokemon>>(initialValue = Resources.Loading()){
         value =viewModel.getPokemonInfo(pokemonName = pokemonName)
     }.value
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -106,7 +111,7 @@ fun PokemonDetailScreen(
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xffececec))
                 .align(Alignment.BottomCenter),
-            navController = navController
+
         )
         Box(
             modifier = Modifier
@@ -116,25 +121,32 @@ fun PokemonDetailScreen(
             if (pokemonDetails is Resources.Success){
 
                 pokemonDetails.data?.sprites?.versions?.generationV?.blackWhite?.animated.let {
-                    AsyncImage(
-                        model = it?.frontDefault,
-                        contentDescription = pokemonDetails.data?.name,
-                        imageLoader = ImageLoader.Builder(LocalContext.current)
-                            .crossfade(true)
-                            .crossfade(1500)
-                            .build(),
-                        contentScale = ContentScale.FillBounds,
-                        modifier = Modifier
-                            .size(pokemonImgSize)
-                            //.offset(y = topPadding)
-                            .padding(bottom = 50.dp, top = 25.dp)
 
+                    val imgLoader = ImageLoader.Builder(context).components {
+                        if (SDK_INT >= 28){
+                            add(ImageDecoderDecoder.Factory())
+                        }else{
+                            add(GifDecoder.Factory())
+                        }
+                    }.build()
+                    Image(
+                        painter = rememberAsyncImagePainter(
+                            ImageRequest.Builder(LocalContext.current).data(data = it?.frontDefault)
+                                .apply(block = fun ImageRequest.Builder.() {
+                                    size(Size.ORIGINAL)
+                                }).build(), imageLoader = imgLoader
+                        ),
+                        contentDescription = pokemonDetails.data?.name,
+                        modifier = Modifier.size(pokemonImgSize)
+                          .padding(bottom = 50.dp, top = 25.dp)
                     )
+
+                    }
                 }
             }
         }
     }
-}
+
 
 @Composable
 fun PokeMonDetailsTop(
@@ -172,7 +184,7 @@ fun PokeMonDetailsTop(
 fun PokeMonDetailsStateWrapper(
     pokemonDetails: Resources<Pokemon>,
     modifier: Modifier = Modifier,
-    navController: NavController
+
 ) {
 
     when(pokemonDetails){
@@ -181,7 +193,6 @@ fun PokeMonDetailsStateWrapper(
                 pokemonDetails = pokemonDetails.data!!,
                 modifier = modifier
                     .padding(30.dp),
-                navController = navController
             )
 
         }
@@ -223,7 +234,7 @@ fun PokeMonDetailsStateWrapper(
 fun PokemonDetailsSection(
     pokemonDetails: Pokemon,
     modifier: Modifier = Modifier,
-    navController: NavController
+
 ) {
     Column(
         modifier = modifier
@@ -249,24 +260,6 @@ fun PokemonDetailsSection(
         PokemonBaseStats(pokemonDetails = pokemonDetails)
 
         Spacer(modifier = Modifier.height(10.dp))
-
-        Button(
-            onClick = {
-                pokemonDetails.id?.let {
-
-                    navController.navigate("pokemon_details_screen/${it}")
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .padding(8.dp)
-                .align(Alignment.CenterHorizontally)
-        ) {
-            Text(text = "See more")
-        }
-
 
     }
 }
@@ -471,4 +464,3 @@ fun PokemonBaseStats (
     }
 
 }
-
