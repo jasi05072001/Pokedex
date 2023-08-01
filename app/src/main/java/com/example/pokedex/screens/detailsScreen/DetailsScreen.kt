@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -98,15 +98,15 @@ fun PokemonDetailScreen(
                 .fillMaxSize()
                 .padding(
                     top = topPadding + pokemonImgSize / 2f,
-                    start = 20.dp,
-                    end = 20.dp,
+                    start = 15.dp,
+                    end = 15.dp,
                     bottom = 20.dp
                 )
                 .shadow(15.dp, RoundedCornerShape(16.dp))
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xffececec))
-                .padding(14.dp)
-                .align(Alignment.BottomCenter)
+                .align(Alignment.BottomCenter),
+            navController = navController
         )
         Box(
             modifier = Modifier
@@ -115,10 +115,10 @@ fun PokemonDetailScreen(
         ){
             if (pokemonDetails is Resources.Success){
 
-                pokemonDetails.data?.sprites?.let {
+                pokemonDetails.data?.sprites?.versions?.generationV?.blackWhite?.animated.let {
                     AsyncImage(
-                        model = it.frontDefault,
-                        contentDescription = pokemonDetails.data.name,
+                        model = it?.frontDefault,
+                        contentDescription = pokemonDetails.data?.name,
                         imageLoader = ImageLoader.Builder(LocalContext.current)
                             .crossfade(true)
                             .crossfade(1500)
@@ -126,8 +126,8 @@ fun PokemonDetailScreen(
                         contentScale = ContentScale.FillBounds,
                         modifier = Modifier
                             .size(pokemonImgSize)
-                            .offset(y = topPadding)
-                            .padding(bottom = 30.dp)
+                            //.offset(y = topPadding)
+                            .padding(bottom = 50.dp, top = 25.dp)
 
                     )
                 }
@@ -172,6 +172,7 @@ fun PokeMonDetailsTop(
 fun PokeMonDetailsStateWrapper(
     pokemonDetails: Resources<Pokemon>,
     modifier: Modifier = Modifier,
+    navController: NavController
 ) {
 
     when(pokemonDetails){
@@ -179,7 +180,8 @@ fun PokeMonDetailsStateWrapper(
             PokemonDetailsSection(
                 pokemonDetails = pokemonDetails.data!!,
                 modifier = modifier
-                    .padding(30.dp)
+                    .padding(30.dp),
+                navController = navController
             )
 
         }
@@ -221,13 +223,14 @@ fun PokeMonDetailsStateWrapper(
 fun PokemonDetailsSection(
     pokemonDetails: Pokemon,
     modifier: Modifier = Modifier,
+    navController: NavController
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(8.dp),
-      horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = pokemonDetails.name
@@ -242,8 +245,27 @@ fun PokemonDetailsSection(
             pokemonWeight = pokemonDetails.weight,
             pokemonHeight = pokemonDetails.height
         )
-        
-      PokemonBaseStats(pokemonDetails = pokemonDetails)
+
+        PokemonBaseStats(pokemonDetails = pokemonDetails)
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Button(
+            onClick = {
+                pokemonDetails.id?.let {
+
+                    navController.navigate("pokemon_details_screen/${it}")
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .padding(8.dp)
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text(text = "See more")
+        }
 
 
     }
@@ -382,7 +404,7 @@ fun PokemonStats(
             .fillMaxWidth()
             .height(statHeight)
             .clip(CircleShape)
-            .background(Color.LightGray.copy(alpha = 0.3f))
+            .background(Color.LightGray.copy(alpha = 0.6f))
     ) {
         Row(
             modifier = Modifier
@@ -390,7 +412,7 @@ fun PokemonStats(
                 .fillMaxHeight()
                 .clip(CircleShape)
                 .background(statColor)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -416,7 +438,7 @@ fun PokemonBaseStats (
     pokemonDetails: Pokemon,
     animDelayPerItem :Int = 150,
 
-) {
+    ) {
     val maxBaseStat = remember {
         pokemonDetails.stats.maxOf { it.baseStat }
     }

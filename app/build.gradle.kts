@@ -89,9 +89,6 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
-    //Timber
-    implementation("com.jakewharton.timber:timber:5.0.1")
-
     //coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.2")
@@ -111,6 +108,7 @@ dependencies {
 
     //coil
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("io.coil-kt:coil-gif:1.4.0")
 
 
     //support palette
@@ -122,8 +120,6 @@ dependencies {
     //lottie
     implementation("com.airbnb.android:lottie-compose:6.0.0")
 
-    //ar core
-    implementation("com.google.ar:core:1.33.0")
 
 
 
